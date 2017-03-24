@@ -5,32 +5,47 @@ date: "3/24/2017"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 ```{r}
 
 library(tidyverse)
 library(dplyr)
+library(lubridate)
+library(stringr)
+
 ```
 
-## R Markdown
+```{r}
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+salem_crew <- read_csv("salem_crew.csv")
+salem_voyages <- read_csv("salem_voyages.csv")
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```
+```{r}
+max(salem_crew$CrewId)
 
-```{r cars}
-summary(cars)
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+
+salem_data_joined_birth_year <- salem_crew %>% 
+  left_join(salem_voyages, "VoyageId") %>% 
+  select(VoyageId, SortDate, BirthPlace) %>%
+  na.omit()
+
+extract_year <- function(x) {
+  year_char <- stringr::str_extract(x, "\\d{4}") 
+  year_int <- as.integer(year_char)
+  year_int
+}
+
+salem_data_tidy_birth_year <- salem_data_joined_birth_year %>% 
+  mutate(SortDate, Year = extract_year(salem_data_joined_birth_year$SortDate)) %>%
+  select(-SortDate)
+
+salem_data_tidy_birth_year_1797_1832 <- salem_data_tidy_birth_year %>%
+  filter(Year >= 1797, Year <= 1832)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
