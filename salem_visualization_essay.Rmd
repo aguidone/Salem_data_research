@@ -11,6 +11,8 @@ library(tidyverse)
 library(dplyr)
 library(lubridate)
 library(stringr)
+library(forcats)
+
 
 ```
 
@@ -20,10 +22,9 @@ salem_crew <- read_csv("salem_crew.csv")
 salem_voyages <- read_csv("salem_voyages.csv")
 
 ```
-```{r}
-max(salem_crew$CrewId)
 
-```
+3,307 voyages between 1797-1832 and 15,364 sailors(1797-1832 which have full data sets including date, position, and complexion). however, this doesn't account for duplicates. could fix by finding code to possibly combine first and last names into one column and then seeing what the difference in totals is. If insignificant total then probably don't have to worry about it but just note it. 
+
 
 
 
@@ -48,4 +49,90 @@ salem_data_tidy_birth_year_1797_1832 <- salem_data_tidy_birth_year %>%
   filter(Year >= 1797, Year <= 1832)
 ```
 
+```{r}
+unique(salem_data_tidy_birth_year_1797_1832$BirthPlace)
 
+```
+
+
+```{r}
+
+salem_data_tidy_birth_year_1797_1832 %>% 
+  count(BirthPlace)
+
+```
+
+```{r}
+
+salem_comprehensive_data <- salem_crew %>% 
+  left_join(salem_voyages, "VoyageId") %>%View
+
+```
+
+```{r}
+
+ggplot(data = salem_comprehensive_data, aes(x = Complexion, na.rm = TRUE)) +
+  geom_bar() + coord_flip()
+```
+
+
+```{r}
+
+salem_data_joined_complexion_year <- salem_comprehensive_data %>% 
+  select(VoyageId, SortDate, BirthPlace, Complexion, Position) %>%
+  na.omit()
+```
+
+```{r}
+extract_year <- function(x) {
+  year_char <- stringr::str_extract(x, "\\d{4}") 
+  year_int <- as.integer(year_char)
+  year_int
+}
+```
+
+```{r}
+salem_data_tidy_complexion_year <- salem_data_joined_complexion_year %>% 
+  mutate(SortDate, Year = extract_year(salem_data_joined_complexion_year$SortDate)) %>%
+  select(-SortDate)
+```
+
+```{r}
+salem_data_tidy_complexion_year_1797_1832 <- salem_data_tidy_complexion_year %>%
+  filter(Year >= 1797, Year <= 1832) %>%View
+```
+
+```{r}
+unique(salem_data_tidy_complexion_year$VoyageId)
+```
+
+
+```{r}
+unique(salem_data_tidy_complexion_year_1797_1832$Position)
+
+```
+
+```{r}
+unique(salem_data_tidy_complexion_year_1797_1832$Complexion)
+
+```
+
+```{r}
+
+complexion_tidy <- data_frame(
+  Complexion = c("Dark", "Light", "Black", "Sallow", "Fair", "Ruddy", "Sandy", "Brown", "Yellow","?", "Dark?", "Mulatto", "Florid", "Sambo", "Black (yellow)", "Quadroon", "Pale", "Very Black", "Bright yellow", "Negro", "Fresh", "Lambs?", "Very Dark", "Colored", "Mixed","Very black", "Burnt", "Dark Olive", "Fairish", "Clear/Ruddy", "Fair Ruddy", "Rather Fair", "Clear", "Tawny", "Swarthy", "Light and Fres", "Dark Brown", "Indian", "African", "Black man", "Dark brown", "Light Brown", "Ruddy Brown","Brownish", "Pink?", "Rather Light", "Fairish?"),
+  
+  Complexion2 = c("Black/Dark", "White", "Black/Dark", "White", "White", "White", "White", "Brown/Mulatto", "Yellow/Olive", "Unknown", "Black/Dark", "Brown/Mulatto", "White", "Black/Dark", "Black/Dark", "Brown/Mulatto", "White", "Black/Dark", "White", "Black/Dark", "White", "Unknown", "Black/Dark", "Black/Dark", "Brown/Mulatto", "Black/Dark", "White", "Yellow/Olive", "White", "White", "White", "White", "White", "Brown/Mulatto", "Yellow/Olive", "White", "Black/Dark", "Indian", "African", "Black/Dark", "Black/Dark", "Brown/Mulatto", "Brown/Mulatto", "Brown/Mulatto", "White", "White", "White")
+)
+```
+
+```{r}
+salem_data_tidy_complexion2_year_1797_1832 <- salem_data_tidy_complexion_year_1797_1832 %>%
+  left_join(complexion_tidy, by = "Complexion")
+```
+
+```{r}
+
+position_tidy <- data_frame(
+  Position =
+)
