@@ -16,8 +16,8 @@ library(forcats)
 ```
 
 ```{r, echo = FALSE, include=FALSE}
-salem_crew <- read_csv("salem_crew.csv")
-salem_voyages <- read_csv("salem_voyages.csv")
+salem_crew <- read_csv("salem_crew_original.csv")
+salem_voyages <- read_csv("salem_voyages_original.csv")
 ```
 
 ```{r, echo = FALSE, include=FALSE}
@@ -89,6 +89,18 @@ complexion_tidy <- data_frame(
 salem_data_tidy_complexion2_year_1797_1832 <- salem_data_tidy_complexion_year_1797_1832 %>%
   left_join(complexion_tidy, by = "Complexion")
 ```
+
+
+```{r}
+
+salem_black <- salem_data_tidy_complexion2_year_1797_1832 %>% 
+  filter(Complexion2 == "Black/Dark")
+
+unique(salem_black$BirthPlace)
+```
+
+
+
 
 ```{r, echo = FALSE, include=FALSE}
 position_tidy <- data_frame(
@@ -984,6 +996,11 @@ salem_data_tidy_complexion2_position3_year_1797_1832 %>%
 ggplot(aes(x = Complexion2)) +
   geom_bar() + coord_flip() + labs(title = "Fig.5 Ship Cooks Departing Salem, 1797-1832", x = "Complexion", y = "Total", caption = "'Stewards' are removed and just cooks remain, but not much as changed from Fig.4")
 ```
+
+```{r}
+write.csv(salem_data_tidy_complexion2_position3_year_1797_1832, file = "salem data - joined with tidy complex,pos,year 1797-1832.csv")
+```
+
 
 ```{r, echo = FALSE, include=FALSE}
 
@@ -1886,3 +1903,10 @@ salem_data_world_connections_BirthPlace2_year_1797_1832 %>%
 ```
 
 It is evident that sailors departing Salem included a range of individuals from around the world. This presents a more complicated and diverse picture of the traditional small-town New England sailor.
+
+```{r}
+
+salem_data_world_connections_BirthPlace2_year_1797_1832 %>% 
+  filter(Complexion == "Black/Dark")
+```
+
