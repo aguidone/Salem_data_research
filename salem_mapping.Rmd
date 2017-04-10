@@ -5,13 +5,9 @@ date: "April 6, 2017"
 output: html_document
 ---
 
-```{r}
+```{r, echo = FALSE, include= FALSE}
 
 library(tidyverse)
-
-```
-
-```{r}
 library(dplyr)
 library(lubridate)
 library(stringr)
@@ -95,6 +91,7 @@ complexion_tidy <- data_frame(
 )
 ```
 
+
 ```{r, echo = FALSE, include=FALSE}
 salem_data_tidy_complexion2_year_1797_1832 <- salem_data_tidy_complexion_year_1797_1832 %>%
   left_join(complexion_tidy, by = "Complexion")
@@ -117,47 +114,6 @@ salem_black_complexion_clean <- read_csv("salem black complexion clean.csv")
 ```
 
 ```{r, echo = FALSE, include=FALSE}
-
-safe_geocode <- dplyr::failwith(tibble::data_frame(lon = NA_real_,
-                                                   lat = NA_real_,
-                                                   address = NA_character_),
-                                ggmap::geocode)
-noisy_geocode <- function(place, ...) {
-  lapply(place, function(p) {
-    message("Geocoding ", p)
-    safe_geocode(p, ...)
-  }) %>% dplyr::bind_rows()
-}
-
-places <- c("Washington DC", NA_character_, "Washington, DC {?]")
-out <- noisy_geocode(places, output = "latlona")
-
-```
-
-```{r, echo = FALSE, include=FALSE}
-birthplace_coords <- geocode(birthplaces_to_edit$BirthPlace2, output = "latlona")
-
-```
-
-```{r, echo = FALSE, include=FALSE}
-
-black_birthplaces_latlon <-bind_cols(birthplaces_to_edit, birthplace_coords)
-
-```
-
-```{r, echo = FALSE, include=FALSE}
-
-salem_Bblack <- salem_black_complexion_clean %>% 
-  left_join(black_birthplaces_latlon, by = "BirthPlace") %>% 
-  filter(!is.na(lat) & !is.na(lon))
-
-```
-
-```{r, echo = FALSE, include=FALSE}
-write.csv(salem_Bblack, file = "Salem - Black Sailors.csv")
-```
-
-```{r, echo = FALSE, include=FALSE}
 Black_sailors <- read_csv("Salem - Black Sailors.csv")
   
 ```
@@ -168,7 +124,10 @@ Black_sailors_no_outliers <- Black_sailors %>%
   filter(BirthPlace2 != "United States", BirthPlace2 != "Sedgewick", BirthPlace2 != "Washington", BirthPlace2 != "Leghorn", BirthPlace2 != "St Sebastian", BirthPlace2 != "St Helena", BirthPlace2 != "Batavia", BirthPlace2 != "Corunna", BirthPlace2 != "Washington, Deleware", BirthPlace2 != "Gluckstadt, Denmark")
 ```
 
-From 1797-1832 approximately 15,500 sailors departed Salem, Massachusetts on trading voyages destined for ports around the world. This was comprised of approximately 8,500 white sailors, 6,500 black sailors, and around 500 described as brown, mullatto, or yellow. [^1]  Many familiar with sailors in the early American republic know that large amounts of sailors were African-American. But, less-studied is where these individuals come from. Interestingly, this data shows that black Salem sailors were born around the world. Relatively few were born in Africa but many came from Europe, South America, and the Caribbean. One caveat to this analysis is that the form which ship captains filled out asked for “complexion” and not “race.” Thus, people with “Black” or “Dark” complexion may not necessarily be “Black” as we would think of them today. Without researching individuals themselves it is hard to determine, but this may be why there are results from Scandinavia, Spain, Italy, etc. Or, it could be that there were more black people than might be assumed who were born in these regions and then were mobilized by the ability to find employment at sea. Regardless, these results are helpful for gaining a sense of where sailors not thought of as white were born. This visualization also gives a sense of the global representation at Salem.
+From 1797-1832 approximately 15,500 sailors departed Salem, Massachusetts on trading voyages destined for ports around the world. This was comprised of approximately 8,500 white sailors, 6,500 black sailors, and around 500 described as brown, mullatto, or yellow. [^1]  Many familiar with sailors in the early American republic know that large amounts of sailors were African-American. But, less-studied is where these individuals come from. Interestingly, this data shows that black Salem sailors were born around the world. Relatively few were born in Africa but many came from Europe, South America, and the Caribbean. 
+
+
+
 
 ```{r, echo = FALSE}
 leaflet() %>%
@@ -180,6 +139,7 @@ leaflet() %>%
 
 ```
 
+One caveat to this analysis is that the form which ship captains filled out asked for “complexion” and not “race.” Thus, people with “Black” or “Dark” complexion may not necessarily be “Black” as we would think of them today. Without researching individuals themselves it is hard to determine, but this may be why there are results from Scandinavia, Spain, Italy, etc. Or, it could be that there were more black people than might be assumed who were born in these regions and then were mobilized by the ability to find employment at sea. Regardless, these results are helpful for gaining a sense of where sailors not thought of as white were born. This visualization also gives a sense of the global representation at Salem.
 ```{r, echo = FALSE, include=FALSE}
 just_usa <- Black_sailors_no_outliers %>% 
   filter(lat > 29.00, lon > -92.00, lon < -50.00, BirthPlace2 != "Bermuda", BirthPlace2 != "St Johns", BirthPlace2 != "Dunkirk", BirthPlace2 != "St Nichols")
@@ -208,7 +168,6 @@ my_rescale <- function(x, value = 5) {
 }
 ```
 
-The above figure focuses on visualization geographic dispersion rather than proportional representation. One anticipated visualization is the large concentration of black sailors from New England. However, more unexpected is the variety of birthplaces throughout the slave-holding south. Most sailors were above the age of 12 so the range of birth years can be assumed to fall between 1785 and 1820. To some extent this falls with the slavery’s shifting fate in the upper-south; as slavery transformed to antebellum plantation slavery in the Deep South it decreased in Virginia, Maryland, and in some areas of North Carolina. [^2] Thus, it makes sense that there would be enslaved people manumitted or born free in the upper south who end up as sailors. Additionally, it is possible some of these individuals were escaped slaves but without research on them individually it is hard to discern. As can be seen, very few black sailors were born in the deep south slave states such as Alabama, Mississippi, and Louisiana. 
 
 
 ```{r, echo = FALSE}
@@ -225,6 +184,7 @@ leaflet() %>%
 ```
 
 
+One anticipated result is the large concentration of black sailors from New England. However, more unexpected is the variety of birthplaces throughout the slave-holding south. Most sailors were above the age of 12 so the range of birth years can be assumed to fall between 1785 and 1820. To some extent this falls with the slavery’s shifting fate in the upper-south; as slavery transformed to antebellum plantation slavery in the Deep South it decreased in Virginia, Maryland, and in some areas of North Carolina. [^2] Thus, it makes sense that there would be enslaved people manumitted or born free in the upper south who end up as sailors. Additionally, it is possible some of these individuals were escaped slaves but without research on them individually it is hard to discern. As can be seen, very few black sailors were born in the deep south slave states such as Alabama, Mississippi, and Louisiana. 
 
 
 
@@ -249,4 +209,11 @@ leaflet() %>%
 ```
 
 If we zoom in on the slave states (roughly states south of the 39’ parallel), one can see that a sizeable number of black sailors were born throughout the slave south. New Orleans, known for their large black population, seems to have produced the most number of black sailors who made it to Salem. 
+
+
+
+
+[^1]: The data I am currently using for this exercise still has the ```na.omit()``` from the last data manipulation I used. I did not have time this week to go back and clean the new race column that would be produced, but I know that I need to in order to get a more complete picture of the sailors departing. I’m missing a few thousand results by using ```na.omit()``` so I will be adjusting it. The reason I did it in the first place was I was thinking if someone had a position listed but not their race then it would be of no use to me so I should remove it. But that threw out a lot of results which could help if I’m just looking at complexion and not position on board ship. So, I will go back and change that.
+
+[^2]: Adam Rothman, Slave Country: American Expansion and the Origins of the Deep South. (Cambridge, MA: Harvard University Press, 2009).
 
