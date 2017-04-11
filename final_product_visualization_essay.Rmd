@@ -91,7 +91,7 @@ salem_data_tidy_complexion2_year_1797_1832 <- salem_data_tidy_complexion_year_17
 ```
 
 
-```{r}
+```{r, echo = FALSE, include=FALSE}
 
 salem_black <- salem_data_tidy_complexion2_year_1797_1832 %>% 
   filter(Complexion2 == "Black/Dark")
