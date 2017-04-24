@@ -1,0 +1,229 @@
+---
+title: "Text Analysis"
+author: "a guidone"
+date: "April 22, 2017"
+output: html_document
+---
+
+```{r setup, echo = FALSE, include=FALSE}
+
+library(tidyverse)
+library(textreuse)
+library(tokenizers)
+library(pryr)
+library(tidytext)
+library(stringr)
+library(tidyr)
+library(topicmodels)
+data(stop_words)
+
+
+```
+
+```{r, echo = FALSE, include=FALSE}
+
+
+read_corpus <- function(dir) {
+  files <- list.files(path = dir, full.names = TRUE)
+  doc_ids <- tools::file_path_sans_ext(basename(files))
+  docs <- purrr::map_chr(files, readr::read_file)
+  tibble::data_frame(doc_id = doc_ids,
+                     filename = basename(files),
+                     text = docs)
+}
+```
+
+```{r, echo = FALSE, include=FALSE}
+my_corpus <- read_corpus("~/spring 2017/Clio 2/lafayette")
+```
+
+```{r, echo = FALSE, include=FALSE}
+tokens <- my_corpus %>% 
+  unnest_tokens(word, text) %>% 
+  anti_join(stop_words) %>% 
+  filter(word != "lafayette", word != "la", word != "fayette", word != "de", word != "gen", word != "o'clock", word != "1824", word != "1825", word != "lafayette's")
+
+```
+
+```{r, echo = FALSE, include = FALSE}
+lafayette_sentiment <- tokens %>% 
+  inner_join(get_sentiments("bing")) %>% 
+  count(word, sentiment, sort = TRUE) %>%
+  ungroup()
+
+
+```
+
+From 1824-1825 General Lafayette toured all twenty-four American states on a welcome tour and celebration of the fiftieth anniversary of the American Revolution. Originally invited by President Monroe, Lafayette was welcomed throughout America by an exuberant populace, enthusiastic press, and fawning politicians. This text analysis operates on roughly 525 pages of combined newspaper clippings covering Lafayette’s return tour.[^1] The text mostly traced his travels, described welcome celebrations, gave parade details, and also printed welcome speeches and at times Lafayette’s response. There is some editorial filler between newspapers and in endnotes but this is dwarfed by the primary source content.
+
+
+On a whole, Lafayette was welcomed positively. Although I cannot speak for certain as I have not read every newspaper, very few seemed to critique the celebrations. One newspaper editorial complained that people celebrated Lafayette more enthusiastically than Christmas but this seemed to have been an outlier. The figure below was produced by ranking the top 10 most positive and most negative words used in press coverage of Lafayette. Interestingly, there does seem to be some less-positive tones running through the newspapers.
+
+```{r, echo = FALSE}
+lafayette_sentiment %>% 
+  group_by(sentiment) %>%
+  top_n(15) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(y = "Press Coverage of General Lafayette's Tour of America, 1824-1825",
+       x = NULL) +
+  coord_flip()
+
+```
+
+
+```{r, echo = FALSE, include=FALSE}
+
+##when I knit, a "selecting by n" message comes up even though I have echo = FALSE, include = FALSE, I'm not sure how to fix it.
+
+top_30 <- lafayette_sentiment %>% 
+  group_by(sentiment) %>%
+  top_n(15) 
+```
+
+
+```{r, echo = FALSE, include=FALSE}
+top_30_afinn <- top_30 %>% 
+  inner_join(get_sentiments("afinn"))
+```
+
+Although this shows the top 10 words used, some of them may have actually been used in a positive sense. Words like “bore”, “lost”, “imposing”, and “struggle”, could refer to the American Revolution. To be a “disinterested” political figure in the early nineteenth century was a virtue and “loud” could be describing crowd’s expressing joy. For a closer look we can plot these words by how strongly negative or positive they are. 
+
+In the following graph we can see just how infrequent negative words appeared in press coverage of Lafayette. 
+
+```{r, echo = FALSE}
+ggplot(data = top_30_afinn, aes(x = n, y = score, shape = sentiment, color = word)) + 
+  geom_point() + labs(title = "Word Strength v. Frequency", y = "Strength Score", x = "Total Occurances")
+
+```
+
+Only one word, "lost", has a negativity strength of -3 whereas there are 5 positive words with a +3 positivity ranking.  Additionally, it also makes clear the discrepancy in how often these words were used throughout newspapers. All the negative words are concentrated to the left of the graph whereas the positive words are on the far right.
+
+
+The next visualization is a topic modeling program which will show group words together based on what it perceives as similar topics. Then, I can use the paragraphs flagged as containing those topics to investigate more about them. I selected 5 topics and the top 10 words used in these are seen below.
+```{r, echo = FALSE, include=FALSE}
+
+## For this next section, I do not mean at all to imply that I came up with this code. I had to use a lot of your code from the worksheets as I did not remember how to write many of the detailed componets of training a model. 
+
+corpus <- my_corpus$text 
+names(corpus) <- my_corpus$filename
+
+corpus_para_1 <- tokenize_paragraphs(corpus)
+
+corpus_paragraphs <- data_frame(filename = names(corpus_para_1), paragraphs = corpus_para_1) %>% 
+  unnest(paragraphs) %>% 
+  group_by(filename) %>% 
+  mutate(para_num =str_pad(1:n(), width = 4, pad = "0"),
+         doc_id = str_c(filename, "-", para_num)) %>% 
+  select(doc_id, filename, para_num, everything()) %>% 
+  ungroup()
+                      
+```
+
+```{r, echo = FALSE, include=FALSE}
+ corpus_paragraphs1 <- corpus_paragraphs %>% 
+  unnest_tokens(word, paragraphs, token = "words") 
+  
+```
+
+```{r, echo = FALSE, include=FALSE}
+
+##I could not figure out why removing these words here did not remove them from the topics modeled later.
+
+corpus_paragraphs2 <- corpus_paragraphs1 %>% 
+  filter(word != "lafayette", word != "la", word != "fayette", word != "de", word != "gen", word != "o'clock", word != "1824", word != "1825", word != "lafayette's", word != "esq", word != "thy", word != "sir")
+```
+
+```{r, echo = FALSE, include=FALSE}
+corpus_paragraphs2
+```
+
+```{r, echo = FALSE, include=FALSE}
+
+corpus_paragraphs_tokens2 <- corpus_paragraphs2 %>% 
+anti_join(stop_words, by = "word")
+```
+
+```{r, echo = FALSE, include=FALSE}
+corpus_paragraphs_tokens2
+```
+
+```{r, echo = FALSE, include=FALSE}
+
+corpus_counts <- corpus_paragraphs_tokens2 %>% 
+  count(doc_id, word) %>% 
+  group_by(doc_id) %>% 
+  mutate(total_words = n())
+  
+corpus_fidf <- corpus_counts %>% 
+  bind_tf_idf(word, doc_id, n) %>% 
+  arrange(desc(tf_idf))
+
+corpus_dtm <- corpus_counts %>% 
+  cast_dtm(doc_id, word, n)
+```
+
+```{r, echo = FALSE, include=FALSE}
+
+if (!file.exists("corpus_lda.rds")) {
+  system.time({corpus_lda <- LDA(corpus_dtm, k = 5, control = list(seed = 6432))})
+  saveRDS(corpus_lda, "corpus_lda.rds")
+} else {
+  corpus_lda <- readRDS("corpus_lda.rds")
+}
+
+```
+
+```{r, echo = FALSE, include=FALSE}
+corpus_topics <- tidy(corpus_lda, matrix = "beta")
+corpus_docs <- tidy(corpus_lda, matrix = "gamma")
+
+```
+
+
+```{r, echo = FALSE, include=FALSE}
+corpus_top_topics <- corpus_topics %>% 
+  group_by(topic) %>% 
+  top_n(10, beta) %>% 
+  ungroup() %>% 
+  arrange(topic, -beta)
+
+```
+
+
+```{r, echo = FALSE}
+corpus_top_topics %>% 
+    mutate(term = reorder(term, beta)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~topic, scales = "free") +
+  coord_flip() + labs(title = "Top 10 words by Topic",x = "Word", y = "How Close Word is Associated with Topic")
+```
+
+The program did well at picking out topic 2 as that seems to be describing celebrations. In my research I was looking at celebrations and parades so I would start by reading all of those paragraphs which contain topic 2 (and possibly topic 3 as well).
+
+
+```{r, echo = FALSE, include=FALSE}
+
+##This is code I wrote to remove words with low counts but did not end up using it.
+
+outliers_n <- tokens %>% 
+  group_by(word) %>% 
+  count()
+
+```
+
+```{r, echo = FALSE, include=FALSE}
+tokens_outliers <- tokens %>% 
+  left_join(outliers_n, by = "word")
+```
+
+```{r, echo = FALSE, include=FALSE}
+tokens_no_outliers <- tokens_outliers %>% 
+  filter(n > 3)
+
+```
+[^1]: the text is taken from vol. I, II, and III of \emph{italics} Lafayette: Guest of the Nation, a Contemporary Account of the Triumphal Tour of General Lafayette\ edited by Edgar E. Brandon.
