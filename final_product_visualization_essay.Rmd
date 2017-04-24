@@ -557,6 +557,7 @@ salem_data_tidy_complexion2_position2_year_1797_1832 %>%
   filter(Complexion2 == "Brown/Mulatto" | Complexion2 == "Indian" | Complexion2 == "Yellow/Olive", Position2 != "Unknown") %>% 
 ggplot(aes(x = Position2, fill = Complexion2)) +
   geom_bar() + coord_flip() + labs(title = "Fig.3 Global Sailors, 1797-1832", x = "Occupation", y = "Total", fill = "Complexion", caption = "Note the high number of 'Yellow/Olive' cooks and stewards")
+
 ```
 Proportionately Global Sailors were a minority of cooks and stewards, but other than seaman this was the most popular occupation they achieved.
  
@@ -997,7 +998,7 @@ ggplot(aes(x = Complexion2)) +
   geom_bar() + coord_flip() + labs(title = "Fig.5 Ship Cooks Departing Salem, 1797-1832", x = "Complexion", y = "Total", caption = "'Stewards' are removed and just cooks remain, but not much as changed from Fig.4")
 ```
 
-```{r}
+```{r, echo = FALSE, include=FALSE}
 write.csv(salem_data_tidy_complexion2_position3_year_1797_1832, file = "salem data - joined with tidy complex,pos,year 1797-1832.csv")
 ```
 
@@ -1903,10 +1904,4 @@ salem_data_world_connections_BirthPlace2_year_1797_1832 %>%
 ```
 
 It is evident that sailors departing Salem included a range of individuals from around the world. This presents a more complicated and diverse picture of the traditional small-town New England sailor.
-
-```{r}
-
-salem_data_world_connections_BirthPlace2_year_1797_1832 %>% 
-  filter(Complexion == "Black/Dark")
-```
 
